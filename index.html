@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>デマはどう広がる？</title>
+<style>
+:root{
+  --bg:#F4F6F8; --card:#FDFDFB; --ink:#17324E; --sub:#4E5D6E; --line:#DCE3EA;
+  --teal:#0E7C7B; --amber:#C8851A; --red:#C44536; --know:#EFA48E; --blue:#4F86B8; --gray:#C9D3DD;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Meiryo","メイリオ","Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;-webkit-text-size-adjust:100%}
+body{padding:14px}
+.wrap{max-width:1100px;margin:0 auto}
+header{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:28px;margin:0}
+.sub{color:var(--sub);font-size:17px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+h2{font-size:21px;margin:0 0 10px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{flex:1;font:inherit;font-size:20px;font-weight:bold;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--sub);cursor:pointer;touch-action:manipulation}
+.tab.on{border-color:var(--ink);background:var(--ink);color:#fff}
+.main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px}
+@media (max-width:780px){.main{grid-template-columns:1fr}}
+svg#net{width:100%;height:auto;display:block;background:#fff;border-radius:12px;border:1px solid var(--line)}
+button{font:inherit;font-size:18px;font-weight:bold;border:none;border-radius:12px;padding:14px 18px;cursor:pointer;touch-action:manipulation;color:#fff;background:var(--teal)}
+button.amber{background:var(--amber)}
+button.ghost{background:#E9EEF3;color:var(--ink)}
+button.stop{background:#5B6B7F}
+button:disabled{opacity:.45}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.status{display:flex;gap:10px;margin:14px 0}
+.stat{flex:1;background:#F4F6F8;border-radius:10px;padding:10px 14px}
+.stat .k{font-size:16px;color:var(--sub)}
+.stat .v{font-size:34px;font-weight:bold}
+.msg{min-height:1.6em;font-size:18px;line-height:1.6}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:17px;margin-top:10px}
+.legend i{display:inline-block;width:18px;height:18px;border-radius:50%;vertical-align:-3px;margin-right:6px}
+.legend i.ring{background:var(--know);border:3px solid var(--ink)}
+.info{font-size:17px;color:var(--sub);line-height:1.7;margin:0 0 12px}
+.setpill{display:inline-block;font-size:15px;font-weight:bold;border-radius:999px;padding:4px 12px;margin-bottom:12px;background:#E9EEF3;color:var(--sub)}
+.setpill.changed{background:#FBF0DC;color:#8A5A0F;border:1px solid var(--amber)}
+.cmphead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.cmphead h2{margin:0}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:780px){.cmp{grid-template-columns:1fr}}
+.hist h3{font-size:19px;margin:0 0 6px}
+.hist canvas{width:100%;display:block}
+.hstat{font-size:17px;line-height:1.7;margin-top:6px}
+.hstat b{font-size:21px}
+table{border-collapse:collapse;width:100%;font-size:17px}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:center}
+th{color:var(--sub);font-weight:normal;font-size:15px}
+tr.new td{background:#FBF0DC;font-weight:bold}
+td.setcol{font-size:15px}
+details summary{cursor:pointer;font-weight:bold;font-size:19px}
+.set{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin-top:12px}
+@media (max-width:780px){.set{grid-template-columns:1fr}}
+.set label{font-size:16px;display:block;margin-bottom:4px}
+.set select{font:inherit;font-size:18px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+pre.code{background:#17324E;color:#F4F6F8;border-radius:10px;padding:12px 14px;font-size:17px;line-height:1.6;overflow-x:auto;margin:12px 0 0}
+.note{font-size:16px;color:var(--sub);margin:8px 0 0;line-height:1.6}
+.logbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.logbtns button{font-size:16px;padding:10px 14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>デマはどう広がる？</h1>
+  <span class="sub">49人・つながりの合計84本・1時間ごとに伝わる</span>
+</header>
+
+<div class="tabs" role="tablist">
+  <button class="tab on" data-m="grid" role="tab">マス目のモデル</button>
+  <button class="tab" data-m="sns" role="tab">SNSのモデル</button>
+</div>
+
+<div class="main">
+  <div class="card">
+    <svg id="net" viewBox="0 0 500 500" aria-label="49人のつながりの図"></svg>
+    <div class="legend">
+      <span><i style="background:var(--gray)"></i>知らない</span>
+      <span><i style="background:var(--red)"></i>広めている</span>
+      <span><i style="background:var(--know)"></i>知っている（もう広めない）</span>
+      <span id="lgCheck" style="display:none"><i style="background:var(--blue)"></i>確かめて転送しなかった</span>
+      <span><i class="ring"></i>最初に流した人</span>
+    </div>
+  </div>
+  <div class="card">
+    <h2 id="modelTitle">マス目のモデル</h2>
+    <p class="info" id="modelInfo"></p>
+    <span class="setpill" id="setPill">設定：はじめのまま</span>
+    <div class="btns">
+      <button id="step">始める</button>
+      <button id="auto">最後まで</button>
+      <button class="ghost" id="restart">最初から</button>
+    </div>
+    <div class="btns" style="margin-top:10px">
+      <button class="amber" id="many">100回まとめて実行</button>
+    </div>
+    <div class="status">
+      <div class="stat"><div class="k">時間</div><div class="v"><span id="hour">－</span>時間</div></div>
+      <div class="stat"><div class="k">デマを知った人</div><div class="v"><span id="knew">－</span>人</div></div>
+    </div>
+    <div class="msg" id="msg" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="cmphead">
+    <h2>100回まとめて実行した結果を比べる</h2>
+    <button class="amber" id="both">両方のモデルで100回ずつ実行</button>
+  </div>
+  <div class="cmp">
+    <div class="hist"><h3>マス目のモデル</h3><canvas id="hgrid" height="210"></canvas><div class="hstat" id="sgrid">まだ実行していません</div></div>
+    <div class="hist"><h3>SNSのモデル</h3><canvas id="hsns" height="210"></canvas><div class="hstat" id="ssns">まだ実行していません</div></div>
+  </div>
+  <p class="note">横軸：デマを知った人数　縦軸：回数（100回のうち）</p>
+</div>
+
+<div class="card">
+  <details id="logBox">
+  <summary id="logSum">記録</summary>
+  <div id="log" style="margin-top:12px"><p class="note">100回まとめて実行すると、ここに記録が残ります（新しい記録が上）。</p></div>
+  <div class="logbtns">
+    <button class="ghost" id="copyLog">記録をコピー</button>
+    <button class="ghost" id="clearLog">記録を消す</button>
+  </div>
+  <p class="note" id="logNote">記録は、このiPadのブラウザに残ります。ページを読み込み直しても消えません。</p>
+  </details>
+</div>
+
+<div class="card">
+  <details id="setBox">
+    <summary>設定（Colabの「② 設定」と同じ）</summary>
+    <div class="set">
+      <div><label for="p">伝わりやすさ　p</label>
+        <select id="p"></select></div>
+      <div><label for="check">改善1：確かめてから転送する人の割合　check_rate</label>
+        <select id="check"><option value="0">0.0（いない）</option><option value="0.1">0.1</option><option value="0.2">0.2</option><option value="0.3">0.3</option></select></div>
+      <div><label for="corr">改善2：訂正の投稿が出る時間　correction_time</label>
+        <select id="corr"><option value="99">99（出ない）</option><option value="3">3時間後</option><option value="4">4時間後</option><option value="5">5時間後</option></select></div>
+      <div><label for="spread">改善3：1人が広め続ける時間　spread_time</label>
+        <select id="spread"><option value="1">1（1時間だけ）</option><option value="2">2時間</option><option value="3">3時間</option></select></div>
+    </div>
+    <pre class="code" id="code"></pre>
+    <div class="logbtns"><button class="ghost" id="resetSet">はじめの設定に戻す</button></div>
+    <p class="note" id="setNote">訂正の投稿が出たあとは、伝わりやすさが0.3倍になります。設定を変えると、比べるグラフは消えます（記録は残ります）。</p>
+  </details>
+</div>
+</div>
+
+<script>
+// ===== データ（Colabのノートブックと同じ） =====
+const N = 49;
+const SNS = [[2,3,7,10,13,14,20,35,37,38],[22,25,26],[0,6],[0,4,5,6,8,9,10,11,12,15,18,21,24,32,33,44],[3,16,45],[3,7,11,13,22,26,27,41,46],[2,3,9,19,20],[0,5,25,38,39],[3,16,18,29,30,40,41],[3,6],[0,3,14],[3,5,44],[3,15,23,28,31,48],[0,5,17],[0,10],[3,12,30],[4,8,21],[13,19,36],[3,8],[6,17,23],[0,6,43,47],[3,16,45],[1,5,24],[12,19],[3,22,29],[1,7,27,34,39,42,43,47],[1,5],[5,25,36],[12,31,37],[8,24],[8,15],[12,28],[3,35,42],[3,34,48],[25,33,40],[0,32],[17,27],[0,28],[0,7],[7,25,46],[8,34],[5,8],[25,32],[20,25],[3,11],[4,21],[5,39],[20,25],[12,33]];
+const SNS_POS = [[0.65,0.544],[0.521,0.05],[0.831,0.652],[0.435,0.555],[0.222,0.613],[0.5,0.351],[0.639,0.615],[0.655,0.337],[0.214,0.465],[0.509,0.685],[0.56,0.624],[0.428,0.453],[0.444,0.771],[0.703,0.442],[0.753,0.701],[0.33,0.706],[0.05,0.544],[0.929,0.55],[0.273,0.542],[0.796,0.752],[0.825,0.468],[0.243,0.657],[0.368,0.197],[0.637,0.876],[0.295,0.396],[0.653,0.19],[0.43,0.15],[0.706,0.277],[0.531,0.9],[0.07,0.368],[0.096,0.641],[0.398,0.95],[0.548,0.467],[0.347,0.502],[0.399,0.268],[0.786,0.569],[0.95,0.357],[0.679,0.773],[0.786,0.415],[0.717,0.114],[0.187,0.277],[0.285,0.296],[0.555,0.244],[0.837,0.228],[0.383,0.642],[0.091,0.767],[0.538,0.152],[0.863,0.275],[0.284,0.795]];
+const GRID = [];
+for (let i = 0; i < N; i++) {
+  const row = Math.floor(i / 7), col = i % 7, f = [];
+  if (row > 0) f.push(i - 7);
+  if (row < 6) f.push(i + 7);
+  if (col > 0) f.push(i - 1);
+  if (col < 6) f.push(i + 1);
+  GRID.push(f);
+}
+const GRID_POS = [];
+for (let i = 0; i < N; i++) GRID_POS.push([0.1 + 0.8 * (i % 7) / 6, 0.1 + 0.8 * Math.floor(i / 7) / 6]);
+const MODELS = {
+  grid: { name: 'マス目のモデル', friends: GRID, pos: GRID_POS,
+          info: '7×7に並んだ49人。上下左右の人とだけつながっている。' },
+  sns:  { name: 'SNSのモデル', friends: SNS, pos: SNS_POS,
+          info: '人によってつながりの数がちがう。点が大きい人ほど、つながりが多い。' }
+};
+
+// ===== 設定 =====
+const S = { p: 0.45, check_rate: 0, correction_time: 99, spread_time: 1 };
+const DEFAULT = { p: 0.45, check_rate: 0, correction_time: 99, spread_time: 1 };
+
+// ===== モデル（Colabの simulate と同じルール） =====
+// 状態 0：知らない 1：広めている 2：知っている（もう広めない）
+function newRun(friends) {
+  const r = { friends, state: new Array(N).fill(0), timer: new Array(N).fill(0),
+              checked: new Array(N).fill(false), hour: 0 };
+  r.start = Math.floor(Math.random() * N);
+  r.state[r.start] = 1; r.timer[r.start] = S.spread_time;
+  return r;
+}
+function active(r) { return r.state.includes(1); }
+function step(r) {
+  r.hour++;
+  const pNow = r.hour >= S.correction_time ? S.p * 0.3 : S.p;
+  const neu = [];
+  for (let i = 0; i < N; i++) {
+    if (r.state[i] === 1) {
+      for (const j of r.friends[i]) {
+        if (r.state[j] === 0 && !neu.includes(j)) {
+          if (Math.random() < pNow) neu.push(j);
+        }
+      }
+    }
+  }
+  for (let i = 0; i < N; i++) {
+    if (r.state[i] === 1) { r.timer[i]--; if (r.timer[i] <= 0) r.state[i] = 2; }
+  }
+  for (const j of neu) {
+    if (Math.random() < S.check_rate) { r.state[j] = 2; r.checked[j] = true; }
+    else { r.state[j] = 1; r.timer[j] = S.spread_time; }
+  }
+}
+function knew(r) { return r.state.filter(s => s !== 0).length; }
+function simulate(friends) { const r = newRun(friends); while (active(r)) step(r); return knew(r); }
+
+// ===== 図 =====
+const svg = document.getElementById('net');
+let model = 'grid', run = null, timer = null;
+const NS = 'http://www.w3.org/2000/svg';
+function deg(i) { return MODELS[model].friends[i].length; }
+function draw() {
+  const m = MODELS[model]; svg.innerHTML = '';
+  const P = i => [30 + 440 * m.pos[i][0], 30 + 440 * m.pos[i][1]];
+  for (let i = 0; i < N; i++) for (const j of m.friends[i]) if (j > i) {
+    const [x1, y1] = P(i), [x2, y2] = P(j);
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('stroke', '#D5DDE5'); l.setAttribute('stroke-width', 2); svg.appendChild(l);
+  }
+  for (let i = 0; i < N; i++) {
+    const [x, y] = P(i);
+    const c = document.createElementNS(NS, 'circle');
+    const rad = model === 'grid' ? 15 : 7 + deg(i) * 1.4;
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', rad);
+    let col = '#C9D3DD';
+    if (run) {
+      const s = run.state[i];
+      col = s === 1 ? '#C44536' : s === 2 ? (run.checked[i] ? '#4F86B8' : '#EFA48E') : '#C9D3DD';
+    }
+    c.setAttribute('fill', col);
+    if (run && i === run.start) { c.setAttribute('stroke', '#17324E'); c.setAttribute('stroke-width', 4); }
+    svg.appendChild(c);
+  }
+}
+function setStatus() {
+  document.getElementById('hour').textContent = run ? run.hour : '－';
+  document.getElementById('knew').textContent = run ? knew(run) : '－';
+}
+
+// ===== 1回やってみる =====
+// 「1時間進める」：押すたびに1時間だけ進む
+// 「最後まで」　　：今の状態から最後まで自動で進む（動いている間は「止める」）
+// 「最初から」　　：最初の1人を選び直して、0時間目から始める
+const btnStep = document.getElementById('step'), btnAuto = document.getElementById('auto');
+const btnRestart = document.getElementById('restart'), btnMany = document.getElementById('many');
+const btnBoth = document.getElementById('both');
+const msg = document.getElementById('msg');
+const MSG_START = '「始める」を押すと、1人からデマが広がり始めます。「最後まで」で一気に進めることもできます。';
+function ended() { return run && !active(run); }
+function updateButtons() {
+  const autoOn = !!timer;
+  btnStep.textContent = run ? '1時間進める' : '始める';
+  btnStep.disabled = autoOn || ended();
+  btnAuto.textContent = autoOn ? '止める' : '最後まで';
+  btnAuto.classList.toggle('stop', autoOn);
+  btnAuto.disabled = !autoOn && ended();
+  btnRestart.disabled = !run;
+  btnRestart.classList.toggle('ghost', !ended());   // 終わったら「最初から」を目立たせる
+  btnMany.disabled = btnBoth.disabled = autoOn;
+}
+function stopAnim() {
+  if (timer) { clearInterval(timer); timer = null; }
+  updateButtons();
+}
+function startRun() {
+  run = newRun(MODELS[model].friends);
+  draw(); setStatus();
+  msg.textContent = '0時間目：紺のふちの人が、最初にデマを流しました。';
+}
+function endText() {
+  return `${run.hour}時間で広がりが止まりました。デマを知った人は${knew(run)}人です。「最初から」でもう一度試せます。`;
+}
+// 1時間進めて、その1時間で起きたことを書く
+function oneHour() {
+  const before = knew(run);
+  const checkedBefore = run.checked.filter(x => x).length;
+  step(run); draw(); setStatus();
+  const n = knew(run) - before;
+  const c = run.checked.filter(x => x).length - checkedBefore;
+  let t = n === 0 ? `${run.hour}時間目：この1時間では、だれにも伝わりませんでした。`
+                  : `${run.hour}時間目：新しく${n}人がデマを知りました。`;
+  if (c > 0) t += `（そのうち${c}人は確かめて転送しませんでした）`;
+  if (!active(run)) t += '　' + endText();
+  msg.textContent = t;
+}
+btnStep.onclick = () => {
+  if (!run) startRun(); else oneHour();
+  updateButtons();
+};
+btnAuto.onclick = () => {
+  if (timer) {   // 動いている途中なら止める
+    stopAnim();
+    msg.textContent = `${run.hour}時間目で止めました。ここまでにデマを知った人は${knew(run)}人です。「1時間進める」か「最後まで」で続きから進めます。`;
+    return;
+  }
+  if (!run) startRun();
+  timer = setInterval(() => {
+    if (!active(run)) { stopAnim(); msg.textContent = endText(); return; }
+    oneHour();
+    if (!active(run)) stopAnim();   // 終わったらすぐボタンを戻す
+  }, 650);
+  updateButtons();
+};
+btnRestart.onclick = () => {
+  stopAnim(); startRun();
+  msg.textContent += '「1時間進める」で1時間ずつ進みます。';
+  updateButtons();
+};
+
+// ===== 100回まとめて実行 =====
+const results = { grid: null, sns: null };
+const LOG_KEY = 'rumor_log_v1';
+const logNote = document.getElementById('logNote');
+let logRows = [];
+try { logRows = JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { logRows = []; }
+function saveLog() { try { localStorage.setItem(LOG_KEY, JSON.stringify(logRows)); } catch (e) {} }
+// Pythonと同じ表示にする（0 → 0.0、19 → 19.0）
+function f1(v) { return Number.isInteger(v) ? v.toFixed(1) : String(v); }
+function summary(a) {
+  const sum = a.reduce((x, y) => x + y, 0);
+  return { avg: f1(Math.round(sum / a.length * 10) / 10), max: Math.max(...a), min: Math.min(...a), big: a.filter(x => x >= 25).length };
+}
+// はじめの設定から変えた項目だけを書く
+function changedItems() {
+  const out = [];
+  if (S.p !== DEFAULT.p) out.push(`p=${f1(S.p)}`);
+  if (S.check_rate !== DEFAULT.check_rate) out.push(`check_rate=${f1(S.check_rate)}`);
+  if (S.correction_time !== DEFAULT.correction_time) out.push(`correction_time=${S.correction_time}`);
+  if (S.spread_time !== DEFAULT.spread_time) out.push(`spread_time=${S.spread_time}`);
+  return out;
+}
+function setText() { const c = changedItems(); return c.length ? c.join(' / ') : 'はじめの設定'; }
+const LOG_NOTE = '記録は、このiPadのブラウザに残ります。ページを読み込み直しても消えません。';
+function runMany(m) {
+  logNote.textContent = LOG_NOTE;
+  const a = [];
+  for (let k = 0; k < 100; k++) a.push(simulate(MODELS[m].friends));
+  results[m] = a;
+  const s = summary(a);
+  logRows.unshift({ model: MODELS[m].name, set: setText(), ...s });
+}
+btnMany.onclick = () => {
+  runMany(model); saveLog(); drawHists(); drawLog(1);
+  msg.textContent = `${MODELS[model].name}で100回実行しました。下のグラフを見てください（結果は「記録」にも残ります）。`;
+};
+btnBoth.onclick = () => {
+  runMany('grid'); runMany('sns'); saveLog(); drawHists(); drawLog(2);
+  msg.textContent = '両方のモデルで100回ずつ実行しました。下のグラフを見てください（結果は「記録」にも残ります）。';
+};
+function drawHists() {
+  for (const k of ['grid', 'sns']) {
+    const cv = document.getElementById('h' + k), st = document.getElementById('s' + k);
+    const dpr = window.devicePixelRatio || 1;
+    const H = +(cv.dataset.h || (cv.dataset.h = cv.getAttribute('height')));
+    const W = cv.clientWidth;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+    const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, W, H);
+    const L = 40, B = 30, T = 10, R = 10, bins = 10;
+    let top = 40;
+    for (const kk of ['grid', 'sns']) if (results[kk]) {
+      const cc = new Array(bins).fill(0);
+      for (const x of results[kk]) cc[Math.min(bins - 1, Math.floor(x / 5))]++;
+      top = Math.max(top, Math.ceil(Math.max(...cc) / 20) * 20);
+    }
+    const ymax = top;
+    c.font = '15px Meiryo, "Hiragino Sans", sans-serif'; c.fillStyle = '#4E5D6E'; c.strokeStyle = '#E3E9F0';
+    c.textAlign = 'right'; c.textBaseline = 'middle';
+    for (let v = 0; v <= ymax; v += 20) { const y = T + (1 - v / ymax) * (H - T - B); c.beginPath(); c.moveTo(L, y); c.lineTo(W - R, y); c.stroke(); c.fillText(v, L - 6, y); }
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    const bw = (W - L - R) / bins;
+    for (let b = 0; b <= bins; b += 2) c.fillText(b * 5, L + b * bw, H - B + 7);
+    const a = results[k];
+    if (!a) { st.textContent = 'まだ実行していません'; continue; }
+    const cnt = new Array(bins).fill(0);
+    for (const x of a) cnt[Math.min(bins - 1, Math.floor(x / 5))]++;
+    c.fillStyle = k === 'grid' ? '#8A97A6' : '#C44536';
+    for (let b = 0; b < bins; b++) {
+      const h = Math.min(cnt[b], ymax) / ymax * (H - T - B);
+      c.fillRect(L + b * bw + 2, H - B - h, bw - 4, h);
+    }
+    const s = summary(a);
+    st.innerHTML = `平均 <b>${s.avg}</b>人　最大 ${s.max}人　最小 ${s.min}人<br>半分（25人）以上に広がった回数 <b>${s.big}</b>回`;
+  }
+}
+function drawLog(newCount) {
+  const el = document.getElementById('log');
+  document.getElementById('logSum').textContent = logRows.length ? `記録（${logRows.length}件${newCount ? '・新しく' + newCount + '件' : ''}）` : '記録';
+  if (!logRows.length) { el.innerHTML = '<p class="note">100回まとめて実行すると、ここに記録が残ります（新しい記録が上）。</p>'; return; }
+  el.innerHTML = `<table><tr><th>モデル</th><th>設定</th><th>平均</th><th>最大</th><th>最小</th><th>半分以上</th></tr>` +
+    logRows.map((r, i) => `<tr class="${i < (newCount || 0) ? 'new' : ''}"><td>${r.model}</td><td class="setcol">${r.set}</td><td>${r.avg}人</td><td>${r.max}人</td><td>${r.min}人</td><td>${r.big}回</td></tr>`).join('') + '</table>';
+}
+
+// ===== 記録をコピー・消す =====
+document.getElementById('copyLog').onclick = () => {
+  if (!logRows.length) { logNote.textContent = 'まだ記録がありません。'; return; }
+  const text = ['モデル\t設定\t平均\t最大\t最小\t半分以上']
+    .concat(logRows.slice().reverse().map(r => `${r.model}\t${r.set}\t${r.avg}\t${r.max}\t${r.min}\t${r.big}`)).join('\n');
+  const done = () => { logNote.textContent = '記録をコピーしました。ワークシートやClassiに貼り付けられます（古い順）。'; };
+  const fallback = () => {
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { logNote.textContent = 'コピーできませんでした。表を長押しして選んでください。'; }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+};
+const btnClear = document.getElementById('clearLog');
+let clearArmed = false, clearTimer;
+btnClear.onclick = () => {
+  if (!clearArmed) {
+    clearArmed = true; btnClear.textContent = 'もう一度押すと消えます';
+    clearTimer = setTimeout(() => { clearArmed = false; btnClear.textContent = '記録を消す'; }, 3000);
+    return;
+  }
+  clearTimeout(clearTimer); clearArmed = false; btnClear.textContent = '記録を消す';
+  logRows = []; saveLog(); drawLog(0);
+  logNote.textContent = '記録を消しました。';
+};
+
+// ===== モデルの切り替え =====
+function selectModel(m) {
+  stopAnim();
+  model = m; run = null;
+  document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('on', t.dataset.m === m); t.setAttribute('aria-selected', t.dataset.m === m); });
+  document.getElementById('modelTitle').textContent = MODELS[m].name;
+  document.getElementById('modelInfo').textContent = MODELS[m].info;
+  draw(); setStatus(); updateButtons();
+  msg.textContent = MSG_START;
+}
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => selectModel(t.dataset.m));
+
+// ===== 設定 =====
+const selP = document.getElementById('p');
+for (const v of [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]) {
+  const o = document.createElement('option'); o.value = v; o.textContent = v; if (v === 0.45) o.selected = true; selP.appendChild(o);
+}
+function showSettings() {
+  document.getElementById('code').textContent =
+`p = ${f1(S.p)}
+check_rate = ${f1(S.check_rate)}
+correction_time = ${S.correction_time}
+spread_time = ${S.spread_time}`;
+  document.getElementById('lgCheck').style.display = S.check_rate > 0 ? '' : 'none';
+  const c = changedItems(), pill = document.getElementById('setPill');
+  pill.textContent = c.length ? `設定を変えています：${c.join(' / ')}` : '設定：はじめのまま';
+  pill.classList.toggle('changed', c.length > 0);
+}
+function onSet() {
+  stopAnim();
+  S.p = +selP.value; S.check_rate = +document.getElementById('check').value;
+  S.correction_time = +document.getElementById('corr').value; S.spread_time = +document.getElementById('spread').value;
+  results.grid = results.sns = null; drawHists(); showSettings();
+  run = null; draw(); setStatus(); updateButtons();
+  msg.textContent = '設定を変えました。もう一度実行してください。';
+  document.getElementById('setNote').textContent = '設定を変えました。画面の上に戻って、もう一度実行してください（記録は残っています）。';
+}
+['p', 'check', 'corr', 'spread'].forEach(id => document.getElementById(id).onchange = onSet);
+document.getElementById('resetSet').onclick = () => {
+  selP.value = '0.45'; document.getElementById('check').value = '0';
+  document.getElementById('corr').value = '99'; document.getElementById('spread').value = '1';
+  onSet();
+};
+window.addEventListener('resize', drawHists);
+
+showSettings(); selectModel('grid'); drawHists(); drawLog(0);
+</script>
+</body>
+</html>
