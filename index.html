@@ -104,6 +104,19 @@ pre.code .num{font:inherit;font-size:inherit;width:7ch;padding:1px 6px;border:2p
 .err{color:var(--red);font-weight:bold;font-size:16px;margin:0 0 10px;line-height:1.6}
 .err:empty{display:none}
 footer{font-size:15px;color:var(--sub);text-align:center;margin:6px 0 20px;line-height:1.6}
+
+/* パスワード */
+.lockTag{font-size:13px;font-weight:bold;color:#8A5A0F;background:#FBF0DC;border-radius:999px;padding:4px 10px;white-space:nowrap}
+body.unlocked .lockTag{display:none}
+#pwMask{position:fixed;inset:0;background:rgba(23,50,78,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#pwMask.on{display:flex}
+#pwBox{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:320px;text-align:center}
+#pwBox h3{margin:0 0 6px;font-size:20px}
+#pwBox p{margin:0 0 12px;color:var(--sub);font-size:15px}
+#pwIn{width:100%;font-size:32px;letter-spacing:.4em;text-align:center;padding:8px;border:2px solid var(--line);border-radius:10px;font-family:inherit;box-sizing:border-box}
+#pwErr{color:#C44536;font-weight:bold;min-height:1.4em;margin:8px 0 0;font-size:15px}
+#pwBox .row{display:flex;gap:8px;margin-top:10px}
+#pwBox .row button{flex:1}
 </style>
 </head>
 <body>
@@ -229,7 +242,7 @@ footer{font-size:15px;color:var(--sub);text-align:center;margin:6px 0 20px;line-
   </details>
 </div>
 
-<footer></footer>
+<footer>星新一「処刑」（『ようこそ地球さん』所収）の設定をもとに、授業用に「爆発」を「故障」に置き換えたシミュレーションです。</footer>
 </div>
 
 <script>
@@ -550,6 +563,48 @@ document.getElementById('resetP').onclick = () => { pSel.value = '0.01'; onP(); 
 window.addEventListener('resize', () => { drawHists(); drawDays(); });
 
 showSet(); showCode(); newBall(); newBall2(); drawHists(); drawDays();
+</script>
+
+<div id="pwMask" role="dialog" aria-modal="true" aria-labelledby="pwT">
+  <div id="pwBox">
+    <h3 id="pwT">パスワード</h3>
+    <p>先生に教えてもらった4桁の数字を入れてください。</p>
+    <input id="pwIn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="4桁のパスワード">
+    <p id="pwErr" aria-live="polite"></p>
+    <div class="row"><button class="ghost" id="pwCancel">やめる</button><button id="pwOk">開く</button></div>
+  </div>
+</div>
+<script>
+// ===== パスワード（②〜④と先生用の設定）=====
+// 変えるときは PW_CODE を新しい4桁に書きかえる
+(function(){
+  const PW_CODE = '4826';
+  const gates = ['cardInside','cardMany','cardDays','setBox'].map(id => document.getElementById(id));
+  const mask = document.getElementById('pwMask'), inp = document.getElementById('pwIn'), err = document.getElementById('pwErr');
+  let unlocked = false, target = null;
+  gates.forEach(d => {
+    const sm = d.querySelector('summary');
+    if (!d.open) { const tag = document.createElement('span'); tag.className = 'lockTag'; tag.textContent = '🔒 先生用'; 
+      if (d.id === 'setBox') sm.appendChild(document.createTextNode(' ')), sm.appendChild(tag); else sm.insertBefore(tag, sm.querySelector('.tog')); }
+    sm.addEventListener('click', e => {
+      if (unlocked || d.open) return;
+      e.preventDefault(); target = d; show();
+    });
+  });
+  function show(){ inp.value=''; err.textContent=''; mask.classList.add('on'); setTimeout(()=>inp.focus(),50); }
+  function hide(){ mask.classList.remove('on'); }
+  function tryOpen(){
+    if (inp.value === PW_CODE) {
+      unlocked = true; document.body.classList.add('unlocked'); hide();
+      if (target) { target.open = true; target.scrollIntoView({block:'nearest'}); }
+    } else { err.textContent = '番号がちがいます'; inp.value=''; inp.focus(); }
+  }
+  inp.addEventListener('input', () => { inp.value = inp.value.replace(/[^0-9]/g,''); err.textContent=''; if (inp.value.length === 4) tryOpen(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') tryOpen(); if (e.key === 'Escape') hide(); });
+  document.getElementById('pwOk').addEventListener('click', tryOpen);
+  document.getElementById('pwCancel').addEventListener('click', hide);
+  mask.addEventListener('click', e => { if (e.target === mask) hide(); });
+})();
 </script>
 </body>
 </html>
